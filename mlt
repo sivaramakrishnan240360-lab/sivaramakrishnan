@@ -1,0 +1,119 @@
+APP.PY
+from flask import Flask, request
+import joblib
+import pandas as pd
+
+app = Flask(__name__)
+
+# Load model
+model = joblib.load("model.pkl")
+
+@app.route("/")
+def home():
+    return '''
+    <h2>Search Ranking Optimization System</h2>
+    <form action="/predict" method="post">
+        Relevance: <input type="text" name="relevance"><br><br>
+        Clicks: <input type="text" name="clicks"><br><br>
+        User Rating: <input type="text" name="user_rating"><br><br>
+        <input type="submit" value="Predict Ranking">
+    </form>
+    '''
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    relevance = float(request.form["relevance"])
+    clicks = float(request.form["clicks"])
+    user_rating = float(request.form["user_rating"])
+
+    input_data = pd.DataFrame(
+        [[relevance, clicks, user_rating]],
+        columns=["relevance", "clicks", "user_rating"]
+    )
+
+    predicted_score = model.predict(input_data)[0]
+
+    websites = {
+        "Website A": predicted_score,
+        "Website B": 72,
+        "Website C": 95,
+        "Website D": 65
+    }
+
+    ranked_results = sorted(
+        websites.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    result_text = f"<h3>Predicted Ranking Score: {predicted_score:.2f}</h3>"
+    result_text += "<h3>Final Ranked Results:</h3>"
+
+    for i, site in enumerate(ranked_results, start=1):
+        result_text += f"{i}. {site[0]} - Score: {site[1]}<br>"
+
+    return result_text
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+    TRAIN_MODEL.PY
+    import json
+import pandas as pd
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+
+with open("data.json", "r") as f:
+    data = json.load(f)
+
+df = pd.DataFrame(data)
+
+X = df[["relevance", "clicks", "user_rating"]]
+y = df["score"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+model = RandomForestRegressor()
+model.fit(X_train, y_train)
+
+joblib.dump(model, "model.pkl")
+
+print("Model Training Completed")
+print("Model saved successfully!")
+
+DATA.JSON
+[
+  {
+    "relevance": 8,
+    "clicks": 100,
+    "user_rating": 4.5,
+    "score": 90
+  },
+  {
+    "relevance": 6,
+    "clicks": 80,
+    "user_rating": 3.8,
+    "score": 70
+  },
+  {
+    "relevance": 9,
+    "clicks": 150,
+    "user_rating": 4.9,
+    "score": 95
+  },
+  {
+    "relevance": 5,
+    "clicks": 60,
+    "user_rating": 3.5,
+    "score": 60
+  },
+  {
+    "relevance": 7,
+    "clicks": 120,
+    "user_rating": 4.2,
+    "score": 85
+  }
+]
