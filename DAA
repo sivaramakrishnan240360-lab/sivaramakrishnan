@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 20
+
+int visited[MAX];
+char webpages[MAX][50];
+
+// Function to perform DFS crawling
+void dfs(int graph[MAX][MAX], int currentPage, int totalPages)
+{
+    int i;
+
+    visited[currentPage] = 1;
+
+    printf("\nCrawling Webpage: %s", webpages[currentPage]);
+
+    // Traverse all connected pages
+    for(i = 0; i < totalPages; i++)
+    {
+        if(graph[currentPage][i] == 1 && visited[i] == 0)
+        {
+            printf("\nLink found from %s -> %s",
+                   webpages[currentPage],
+                   webpages[i]);
+
+            dfs(graph, i, totalPages);
+        }
+    }
+}
+
+// Function to display adjacency matrix
+void displayGraph(int graph[MAX][MAX], int totalPages)
+{
+    int i, j;
+
+    printf("\n\nWebsite Link Structure (Adjacency Matrix):\n");
+
+    for(i = 0; i < totalPages; i++)
+    {
+        for(j = 0; j < totalPages; j++)
+        {
+            printf("%d ", graph[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main()
+{
+    int graph[MAX][MAX];
+    int totalPages;
+    int i, j;
+    int startPage;
+
+    printf("=============================================\n");
+    printf("   WEBSITE CRAWLING SYSTEM USING DFS\n");
+    printf("=============================================\n");
+
+    printf("\nEnter total number of webpages: ");
+    scanf("%d", &totalPages);
+
+    getchar(); // Clear input buffer
+
+    // Input webpage names
+    printf("\nEnter webpage names:\n");
+    for(i = 0; i < totalPages; i++)
+    {
+        printf("Webpage %d name: ", i);
+        fgets(webpages[i], sizeof(webpages[i]), stdin);
+
+        webpages[i][strcspn(webpages[i], "\n")] = '\0';
+    }
+
+    // Input adjacency matrix
+    printf("\nEnter adjacency matrix (1 if link exists, otherwise 0):\n");
+
+    for(i = 0; i < totalPages; i++)
+    {
+        for(j = 0; j < totalPages; j++)
+        {
+            scanf("%d", &graph[i][j]);
+        }
+    }
+
+    // Display website structure
+    displayGraph(graph, totalPages);
+
+    // Choose starting page
+    printf("\nEnter starting webpage index for crawling: ");
+    scanf("%d", &startPage);
+
+    printf("\n\nStarting DFS Website Crawling...\n");
+
+    // Perform DFS
+    dfs(graph, startPage, totalPages);
+
+    // Display unvisited pages
+    printf("\n\nChecking for Unvisited Pages:\n");
+
+    for(i = 0; i < totalPages; i++)
+    {
+        if(visited[i] == 0)
+        {
+            printf("%s was not visited.\n", webpages[i]);
+        }
+    }
+
+    printf("\nWebsite Crawling Completed Successfully!\n");
+
+    return 0;
+}
